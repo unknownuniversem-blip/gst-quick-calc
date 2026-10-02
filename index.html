@@ -1,0 +1,734 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+  <title>GST कैलकुलेटर व रिवर्स बिलिंग (Forward & Reverse GST Calculator)</title>
+  <meta name="description" content="फास्ट और सटीक GST कैलकुलेटर। 0%, 5%, 12%, 18%, 28% स्लैब, CGST/SGST व IGST टैक्स स्प्लिट, रिवर्स बिलिंग और प्रिंटेबल रसीद। 100% प्राइवेट।">
+
+  <!-- Dynamic SVG Favicon -->
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%230f172a' stroke='%2338bdf8' stroke-width='1.5'/%3E%3Cpath d='M8 12h16M8 16h11M8 20h8' stroke='%2310b981' stroke-width='2.2' stroke-linecap='round'/%3E%3Ccircle cx='23' cy='19' r='3' fill='none' stroke='%2338bdf8' stroke-width='2'/%3E%3C/svg%3E">
+
+  <style>
+    :root {
+      --bg: #0b1120;
+      --card: #151f32;
+      --card-inner: #0d1526;
+      --border: #223249;
+      --border-focus: #38bdf8;
+      --text: #f8fafc;
+      --muted: #94a3b8;
+      --primary: #38bdf8;
+      --accent: #10b981;
+      --accent-hover: #059669;
+      --danger: #ef4444;
+      --radius: 12px;
+    }
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Noto Sans Devanagari", sans-serif;
+      word-break: break-word;
+      overflow-wrap: anywhere;
+    }
+    input[type="number"]::-webkit-inner-spin-button,
+    input[type="number"]::-webkit-outer-spin-button {
+      -webkit-appearance: none;
+      margin: 0;
+    }
+    input[type="number"] {
+      -moz-appearance: textfield;
+    }
+    html, body {
+      max-width: 100vw;
+      overflow-x: hidden;
+      background-color: var(--bg);
+      color: var(--text);
+      line-height: 1.5;
+    }
+    .container {
+      width: 100%;
+      max-width: 1050px;
+      margin: 0 auto;
+      padding: 1.25rem 1rem 3.5rem 1rem;
+    }
+    header { text-align: center; margin-bottom: 1.75rem; }
+    .brand-box {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 0.6rem;
+    }
+    .brand-name {
+      font-size: 1.3rem;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      color: #fff;
+    }
+    .brand-badge {
+      background: rgba(16, 185, 129, 0.15);
+      color: var(--accent);
+      border: 1px solid rgba(16, 185, 129, 0.3);
+      font-size: 0.68rem;
+      font-weight: 700;
+      padding: 3px 10px;
+      border-radius: 9999px;
+      text-transform: uppercase;
+    }
+    header h1 {
+      font-size: clamp(1.4rem, 3.5vw, 2.1rem);
+      font-weight: 800;
+      color: #fff;
+      margin-bottom: 0.4rem;
+    }
+    header p {
+      color: var(--muted);
+      font-size: clamp(0.85rem, 2vw, 0.95rem);
+      max-width: 700px;
+      margin: 0 auto;
+    }
+
+    /* Mode Selection Tabs */
+    .mode-tabs {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-bottom: 1.5rem;
+    }
+    .mode-btn {
+      padding: 12px;
+      border-radius: 8px;
+      border: 1.5px solid var(--border);
+      background: var(--card-inner);
+      color: var(--muted);
+      font-weight: 700;
+      font-size: 0.9rem;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      transition: all 0.15s ease;
+    }
+    .mode-btn span:first-child {
+      font-size: 0.98rem;
+      color: #fff;
+    }
+    .mode-btn span:last-child {
+      font-size: 0.72rem;
+      font-weight: 500;
+    }
+    .mode-btn.active {
+      border-color: var(--primary);
+      background: rgba(56, 189, 248, 0.12);
+    }
+    .mode-btn.active span:first-child {
+      color: var(--primary);
+    }
+
+    .grid-layout {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 1.5rem;
+    }
+    @media (min-width: 860px) {
+      .grid-layout {
+        grid-template-columns: 1.05fr 0.95fr;
+        align-items: start;
+      }
+      .sticky-pane {
+        position: sticky;
+        top: 1.5rem;
+      }
+    }
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.35rem;
+      margin-bottom: 1.25rem;
+    }
+    .card-title {
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: #fff;
+      margin-bottom: 0.35rem;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .card-subtitle {
+      font-size: 0.8rem;
+      color: var(--muted);
+      margin-bottom: 1.2rem;
+    }
+
+    /* Slab Selector Buttons */
+    .slab-grid {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 8px;
+      margin-bottom: 1.25rem;
+    }
+    .slab-btn {
+      padding: 10px 4px;
+      background: var(--card-inner);
+      border: 1.5px solid var(--border);
+      border-radius: 8px;
+      color: #fff;
+      font-weight: 800;
+      font-size: 1rem;
+      cursor: pointer;
+      text-align: center;
+      transition: all 0.15s ease;
+    }
+    .slab-btn:hover {
+      border-color: var(--primary);
+      background: rgba(56, 189, 248, 0.1);
+    }
+    .slab-btn.active {
+      border-color: var(--accent);
+      background: rgba(16, 185, 129, 0.18);
+      color: var(--accent);
+    }
+
+    /* Spaced Input Elements */
+    .input-group {
+      margin-bottom: 1.25rem;
+    }
+    .input-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+    .input-header label {
+      font-size: 0.82rem;
+      font-weight: 700;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+    }
+    .input-field-wrap {
+      display: flex;
+      align-items: center;
+      background: var(--card-inner);
+      border: 1.5px solid var(--border);
+      border-radius: 9px;
+      padding: 8px 14px;
+      transition: all 0.2s ease;
+    }
+    .input-field-wrap:focus-within {
+      border-color: var(--border-focus);
+      box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.15);
+    }
+    .input-prefix {
+      color: var(--muted);
+      font-weight: 700;
+      font-size: 1.05rem;
+      margin-right: 8px;
+      user-select: none;
+    }
+    .editable-input {
+      width: 100%;
+      background: transparent;
+      border: none;
+      color: #fff;
+      font-weight: 800;
+      font-size: 1.25rem;
+      font-family: monospace;
+      outline: none;
+      text-align: right;
+    }
+
+    /* State Switcher (Intra vs Inter state) */
+    .tax-type-box {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-bottom: 1.25rem;
+    }
+    .tax-pill {
+      padding: 9px;
+      border-radius: 6px;
+      background: var(--card-inner);
+      border: 1px solid var(--border);
+      color: var(--muted);
+      font-size: 0.8rem;
+      font-weight: 700;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+    .tax-pill.active {
+      border-color: var(--primary);
+      color: #fff;
+      background: rgba(56, 189, 248, 0.12);
+    }
+
+    /* Receipt Slip Layout */
+    .receipt-slip {
+      background: var(--card-inner);
+      border: 1.5px dashed var(--border);
+      border-radius: var(--radius);
+      padding: 1.4rem;
+      margin-bottom: 1.25rem;
+      position: relative;
+    }
+    .receipt-header {
+      text-align: center;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 10px;
+      margin-bottom: 12px;
+    }
+    .receipt-title {
+      font-size: 0.95rem;
+      font-weight: 800;
+      color: #fff;
+      letter-spacing: 0.05em;
+    }
+    .receipt-sub {
+      font-size: 0.72rem;
+      color: var(--muted);
+    }
+    .receipt-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 6px 0;
+      font-size: 0.85rem;
+    }
+    .receipt-row.total-row {
+      border-top: 1.5px solid var(--border);
+      margin-top: 8px;
+      padding-top: 10px;
+      font-size: 1.05rem;
+      font-weight: 800;
+    }
+    .receipt-val {
+      font-family: monospace;
+      font-weight: 700;
+      color: #fff;
+    }
+
+    .btn-action {
+      display: block;
+      width: 100%;
+      padding: 12px;
+      font-size: 0.95rem;
+      font-weight: 700;
+      text-align: center;
+      background: var(--accent);
+      color: #052e16;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background-color 0.15s ease;
+      margin-bottom: 8px;
+    }
+    .btn-action:hover { background: var(--accent-hover); }
+    .btn-sub {
+      display: block;
+      width: 100%;
+      padding: 10px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      text-align: center;
+      background: var(--card-inner);
+      color: var(--muted);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      cursor: pointer;
+    }
+    .btn-sub:hover { color: #fff; border-color: var(--muted); }
+
+    /* Ecosystem */
+    .ecosystem-section {
+      margin-top: 2.5rem;
+      border-top: 1px solid var(--border);
+      padding-top: 2rem;
+    }
+    .ecosystem-section h3 {
+      font-size: 1.1rem;
+      color: #fff;
+      margin-bottom: 0.4rem;
+      text-align: center;
+    }
+    .ecosystem-section p {
+      font-size: 0.82rem;
+      color: var(--muted);
+      text-align: center;
+      margin-bottom: 1.25rem;
+    }
+    .eco-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 12px;
+    }
+    .eco-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 12px;
+      text-decoration: none;
+      color: var(--text);
+      transition: border-color 0.15s ease;
+    }
+    .eco-card:hover { border-color: var(--primary); }
+    .eco-card strong {
+      display: block;
+      font-size: 0.88rem;
+      color: #fff;
+      margin-bottom: 2px;
+    }
+    .eco-card span { font-size: 0.75rem; color: var(--muted); }
+    footer {
+      text-align: center;
+      margin-top: 2.5rem;
+      font-size: 0.75rem;
+      color: var(--muted);
+    }
+    #toast {
+      visibility: hidden;
+      min-width: 220px;
+      background-color: var(--accent);
+      color: #052e16;
+      text-align: center;
+      border-radius: 6px;
+      padding: 10px 16px;
+      position: fixed;
+      z-index: 2000;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-weight: 700;
+      font-size: 0.85rem;
+    }
+    #toast.show {
+      visibility: visible;
+      animation: fadein 0.3s, fadeout 0.3s 2.2s;
+    }
+    @keyframes fadein { from { bottom: 0; opacity: 0; } to { bottom: 24px; opacity: 1; } }
+    @keyframes fadeout { from { bottom: 24px; opacity: 1; } to { bottom: 0; opacity: 0; } }
+
+    @media print {
+      body * { visibility: hidden; }
+      #printableReceipt, #printableReceipt * { visibility: visible; }
+      #printableReceipt {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100%;
+        color: #000 !important;
+        background: #fff !important;
+        border: 1px solid #000 !important;
+      }
+      .receipt-val, .receipt-title { color: #000 !important; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- GLOBAL NETWORK HEADER -->
+  <div id="quicktools-global-bar" style="background:#090d16; border-bottom:1px solid #1e293b; padding:10px 16px; display:flex; align-items:center; justify-content:space-between; font-family:system-ui, -apple-system, sans-serif; font-size:13px; z-index:99999; position:relative; width:100%; box-sizing:border-box;">
+    <div style="display:flex; align-items:center; gap:8px;">
+      <a href="https://unknownuniversem-blip.github.io/" style="color:#f8fafc; font-weight:700; text-decoration:none; display:flex; align-items:center; gap:6px;">
+        <span style="background:#38bdf8; color:#0b1120; font-size:10px; font-weight:900; padding:2px 6px; border-radius:4px;">HUB</span>
+        <span>QuickTools</span>
+      </a>
+    </div>
+    <div style="display:flex; align-items:center; gap:12px; overflow-x:auto;">
+      <a href="https://unknownuniversem-blip.github.io/gst-quick-calc/" style="color:#38bdf8; text-decoration:none; font-weight:700; white-space:nowrap;">🧾 GST कैलकुलेटर</a>
+      <span style="color:#334155;">|</span>
+      <a href="https://unknownuniversem-blip.github.io/land-converter/" style="color:#10b981; text-decoration:none; font-weight:600; white-space:nowrap;">🌾 जमीन नाप</a>
+      <span style="color:#334155;">|</span>
+      <a href="https://unknownuniversem-blip.github.io/loan-emi-calculator/" style="color:#94a3b8; text-decoration:none; font-weight:600; white-space:nowrap;">💰 EMI Reducer</a>
+      <span style="color:#334155;">|</span>
+      <a href="https://unknownuniversem-blip.github.io/wa-direct/" style="color:#94a3b8; text-decoration:none; font-weight:600; white-space:nowrap;">💬 WA Direct</a>
+      <span style="color:#334155;">|</span>
+      <a href="https://unknownuniversem-blip.github.io/exam-resizer/" style="color:#94a3b8; text-decoration:none; font-weight:600; white-space:nowrap;">📷 Photo Resizer</a>
+      <span style="color:#334155;">|</span>
+      <a href="https://unknownuniversem-blip.github.io/typing-speed-finger-test/" style="color:#94a3b8; text-decoration:none; font-weight:600; white-space:nowrap;">⌨ Typing Test</a>
+    </div>
+  </div>
+
+  <div class="container">
+    <header>
+      <div class="brand-box">
+        <svg width="34" height="34" viewBox="0 0 32 32">
+          <rect width="32" height="32" rx="8" fill="#1e293b" stroke="#334155" stroke-width="1.5"/>
+          <path d="M8 12h16M8 16h11M8 20h8" stroke="#10b981" stroke-width="2.2" stroke-linecap="round"/>
+          <circle cx="23" cy="19" r="3" fill="none" stroke="#38bdf8" stroke-width="2"/>
+        </svg>
+        <span class="brand-name">GST<span style="color:#38bdf8;">Quick</span>Calc</span>
+        <span class="brand-badge">रिवर्स बिलिंग मोड</span>
+      </div>
+      <h1>GST कैलकुलेटर एवं रिवर्स बिलिंग</h1>
+      <p>एमआरपी/बिल से असली बेस रेट और CGST/SGST टैक्स स्प्लिट अलग करें, या नेट रेट में GST जोड़कर तुरंत पक्का बिल बनाएं।</p>
+    </header>
+
+    <!-- CALCULATION MODE SWITCHER -->
+    <div class="mode-tabs">
+      <button type="button" class="mode-btn active" id="btnModeReverse" onclick="setMode('reverse')">
+        <span>🔄 रिवर्स बिलिंग (Reverse / MRP Mode)</span>
+        <span>कुल बिल / MRP से असली रेट व टैक्स अलग करें</span>
+      </button>
+      <button type="button" class="mode-btn" id="btnModeForward" onclick="setMode('forward')">
+        <span>➕ फॉरवर्ड बिलिंग (Forward Mode)</span>
+        <span>बेस रेट में GST जोड़कर कुल बिल बनाएं</span>
+      </button>
+    </div>
+
+    <div class="grid-layout">
+      <!-- INPUTS COLUMN -->
+      <div>
+        <div class="card">
+          <div class="card-title">1. रकम डालें (Enter Amount)</div>
+          <div class="card-subtitle" id="lblModeHint">कुल फाइनल बिल या MRP डालें (GST सहित)</div>
+
+          <div class="input-group">
+            <div class="input-header">
+              <label id="lblAmountTitle">कुल बिल रकम (Gross / MRP Amount)</label>
+            </div>
+            <div class="input-field-wrap">
+              <span class="input-prefix">₹</span>
+              <input type="number" id="inputAmount" class="editable-input" value="1180" min="0" step="any" oninput="calculateGst()">
+            </div>
+          </div>
+
+          <label style="margin-bottom:8px;">GST टैक्स स्लैब चुनें (Tax Slab %)</label>
+          <div class="slab-grid">
+            <button type="button" class="slab-btn" onclick="setSlab(0)">0%</button>
+            <button type="button" class="slab-btn" onclick="setSlab(5)">5%</button>
+            <button type="button" class="slab-btn" onclick="setSlab(12)">12%</button>
+            <button type="button" class="slab-btn active" onclick="setSlab(18)">18%</button>
+            <button type="button" class="slab-btn" onclick="setSlab(28)">28%</button>
+          </div>
+
+          <label style="margin-bottom:8px;">बिल का प्रकार (State Tax Type)</label>
+          <div class="tax-type-box">
+            <div class="tax-pill active" id="pillIntra" onclick="setTaxType('intra')">
+              अपने राज्य में (CGST + SGST)
+            </div>
+            <div class="tax-pill" id="pillInter" onclick="setTaxType('inter')">
+              दूसरे राज्य में (IGST)
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- RECEIPT SLIP COLUMN -->
+      <div class="sticky-pane">
+        <div class="card">
+          <div class="card-title" style="color:var(--accent);">2. बिल व टैक्स समरी (Receipt Breakdown)</div>
+          <div class="card-subtitle">पारदर्शी हिसाब (Transparent Tax Split)</div>
+
+          <div class="receipt-slip" id="printableReceipt">
+            <div class="receipt-header">
+              <div class="receipt-title">GST BILLING SUMMARY</div>
+              <div class="receipt-sub" id="slipModeLabel">रिवर्स बिलिंग (Reverse Calculation)</div>
+            </div>
+
+            <div class="receipt-row">
+              <span style="color:var(--muted);">मूल मूल्य (Base / Net Price):</span>
+              <span class="receipt-val" id="resBasePrice">₹1,000.00</span>
+            </div>
+
+            <div class="receipt-row">
+              <span style="color:var(--muted);">GST टैक्स स्लैब (Rate):</span>
+              <span class="receipt-val" id="resTaxRate">18%</span>
+            </div>
+
+            <div id="intraTaxRows">
+              <div class="receipt-row">
+                <span style="color:var(--muted);">केंद्रीय कर (CGST @ <span id="lblCgstRate">9%</span>):</span>
+                <span class="receipt-val" style="color:var(--primary);" id="resCgst">₹90.00</span>
+              </div>
+              <div class="receipt-row">
+                <span style="color:var(--muted);">राज्य कर (SGST @ <span id="lblSgstRate">9%</span>):</span>
+                <span class="receipt-val" style="color:var(--primary);" id="resSgst">₹90.00</span>
+              </div>
+            </div>
+
+            <div id="interTaxRows" style="display:none;">
+              <div class="receipt-row">
+                <span style="color:var(--muted);">एकीकृत कर (IGST @ <span id="lblIgstRate">18%</span>):</span>
+                <span class="receipt-val" style="color:var(--primary);" id="resIgst">₹180.00</span>
+              </div>
+            </div>
+
+            <div class="receipt-row">
+              <span style="color:var(--muted); font-weight:700;">कुल टैक्स रकम (Total GST):</span>
+              <span class="receipt-val" style="color:var(--accent);" id="resTotalTax">₹180.00</span>
+            </div>
+
+            <div class="receipt-row total-row">
+              <span style="color:#fff;">कुल अंतिम बिल (Gross Total):</span>
+              <span class="receipt-val" style="color:#fff; font-size:1.3rem;" id="resGrossTotal">₹1,180.00</span>
+            </div>
+          </div>
+
+          <button class="btn-action" onclick="shareWhatsApp()">💬 WhatsApp पर रसीद भेजें</button>
+          <button class="btn-sub" onclick="window.print()">🖨 रसीद प्रिंट करें / PDF सेव करें</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ZERO STORAGE PLEDGE -->
+    <div style="display:flex; align-items:center; gap:10px; background:rgba(16,185,129,0.08); border:1px solid rgba(16,185,129,0.25); border-radius:8px; padding:10px 14px; margin-top:1.5rem;">
+      <span style="font-size:1.2rem;">🔒</span>
+      <span style="font-size:0.78rem; color:var(--muted);">100% सुरक्षित (Zero Storage): आपका कोई भी इनवॉइस डेटा या बिलिंग रिकॉर्ड किसी सर्वर पर नहीं भेजा जाता।</span>
+    </div>
+
+    <!-- ECOSYSTEM CROSS-PROMOTION -->
+    <div class="ecosystem-section">
+      <h3>QuickTools के अन्य उपयोगी टूल्स</h3>
+      <p>बिना किसी विज्ञापन या सर्वर लोड के सीधे ब्राउज़र में चलने वाले तेज टूल्स।</p>
+      <div class="eco-grid">
+        <a href="https://unknownuniversem-blip.github.io/land-converter/" class="eco-card">
+          <strong>🌾 जमीन नाप और रजिस्ट्री खर्च</strong>
+          <span>बीघा, बिस्वा, कट्ठा, धुर, गज को वर्ग फुट में बदलें और सर्किल रेट निकालें।</span>
+        </a>
+        <a href="https://unknownuniversem-blip.github.io/loan-emi-calculator/" class="eco-card">
+          <strong>💰 लोन EMI व ब्याज बचत</strong>
+          <span>होम व कार लोन EMI, 0% नो-कॉस्ट EMI और प्रीपेमेंट बचत कैलकुलेटर।</span>
+        </a>
+        <a href="https://unknownuniversem-blip.github.io/wa-direct/" class="eco-card">
+          <strong>💬 डायरेक्ट WhatsApp चैट</strong>
+          <span>बिना नंबर सेव किए तुरंत मैसेज भेजें और मल्टी-नंबर ब्रॉडकास्ट करें।</span>
+        </a>
+        <a href="https://unknownuniversem-blip.github.io/exam-resizer/" class="eco-card">
+          <strong>📷 सरकारी परीक्षा फोटो रिसाइजर</strong>
+          <span>SSC, UPSC, NEET फॉर्म के लिए फोटो व साइन को 20-50 KB में रीसाइज करें।</span>
+        </a>
+      </div>
+    </div>
+
+    <footer>
+      <div>QuickTools Network &copy; 2026. 100% Free Client-Side Utilities.</div>
+    </footer>
+  </div>
+
+  <div id="toast">विवरण कॉपी हो गया!</div>
+
+  <script>
+    let currentMode = 'reverse'; // 'reverse' (Inclusive) or 'forward' (Exclusive)
+    let currentSlab = 18;
+    let taxType = 'intra'; // 'intra' (CGST+SGST) or 'inter' (IGST)
+
+    window.addEventListener('DOMContentLoaded', () => {
+      calculateGst();
+    });
+
+    function setMode(mode) {
+      currentMode = mode;
+      const btnRev = document.getElementById('btnModeReverse');
+      const btnFwd = document.getElementById('btnModeForward');
+      const hint = document.getElementById('lblModeHint');
+      const title = document.getElementById('lblAmountTitle');
+      const slipLabel = document.getElementById('slipModeLabel');
+      const inputEl = document.getElementById('inputAmount');
+
+      if (mode === 'reverse') {
+        btnRev.classList.add('active');
+        btnFwd.classList.remove('active');
+        hint.innerText = 'कुल फाइनल बिल या MRP डालें (GST सहित)';
+        title.innerText = 'कुल बिल रकम (Gross / MRP Amount)';
+        slipLabel.innerText = 'रिवर्स बिलिंग (Reverse / MRP Calculation)';
+        inputEl.value = 1180;
+      } else {
+        btnFwd.classList.add('active');
+        btnRev.classList.remove('active');
+        hint.innerText = 'बिना टैक्स वाला मूल बेस रेट डालें (Exclusive of Tax)';
+        title.innerText = 'मूल बेस रकम (Net Base Amount)';
+        slipLabel.innerText = 'फॉरवर्ड बिलिंग (Forward Calculation)';
+        inputEl.value = 1000;
+      }
+      calculateGst();
+    }
+
+    function setSlab(rate) {
+      currentSlab = rate;
+      const btns = document.querySelectorAll('.slab-grid .slab-btn');
+      btns.forEach(b => {
+        if (b.innerText === `${rate}%`) b.classList.add('active');
+        else b.classList.remove('active');
+      });
+      calculateGst();
+    }
+
+    function setTaxType(type) {
+      taxType = type;
+      const pIntra = document.getElementById('pillIntra');
+      const pInter = document.getElementById('pillInter');
+      const intraRows = document.getElementById('intraTaxRows');
+      const interRows = document.getElementById('interTaxRows');
+
+      if (type === 'intra') {
+        pIntra.classList.add('active');
+        pInter.classList.remove('active');
+        intraRows.style.display = 'block';
+        interRows.style.display = 'none';
+      } else {
+        pInter.classList.add('active');
+        pIntra.classList.remove('active');
+        intraRows.style.display = 'none';
+        interRows.style.display = 'block';
+      }
+      calculateGst();
+    }
+
+    function formatInr(val) {
+      return '₹' + Number(val.toFixed(2)).toLocaleString('en-IN', { minimumFractionDigits: 2 });
+    }
+
+    function calculateGst() {
+      const amt = parseFloat(document.getElementById('inputAmount').value) || 0;
+      let basePrice = 0;
+      let totalTax = 0;
+      let grossPrice = 0;
+
+      if (currentMode === 'reverse') {
+        // Reverse calculation from Gross Total
+        grossPrice = amt;
+        basePrice = grossPrice / (1 + (currentSlab / 100));
+        totalTax = grossPrice - basePrice;
+      } else {
+        // Forward calculation from Base Price
+        basePrice = amt;
+        totalTax = basePrice * (currentSlab / 100);
+        grossPrice = basePrice + totalTax;
+      }
+
+      const halfRate = (currentSlab / 2);
+      const halfTax = totalTax / 2;
+
+      document.getElementById('resBasePrice').innerText = formatInr(basePrice);
+      document.getElementById('resTaxRate').innerText = `${currentSlab}%`;
+      document.getElementById('resTotalTax').innerText = formatInr(totalTax);
+      document.getElementById('resGrossTotal').innerText = formatInr(grossPrice);
+
+      // Intra state labels
+      document.getElementById('lblCgstRate').innerText = `${halfRate}%`;
+      document.getElementById('lblSgstRate').innerText = `${halfRate}%`;
+      document.getElementById('resCgst').innerText = formatInr(halfTax);
+      document.getElementById('resSgst').innerText = formatInr(halfTax);
+
+      // Inter state labels
+      document.getElementById('lblIgstRate').innerText = `${currentSlab}%`;
+      document.getElementById('resIgst').innerText = formatInr(totalTax);
+    }
+
+    function shareWhatsApp() {
+      const base = document.getElementById('resBasePrice').innerText;
+      const tax = document.getElementById('resTotalTax').innerText;
+      const total = document.getElementById('resGrossTotal').innerText;
+      const splitType = taxType === 'intra' ? `CGST (${currentSlab/2}%): ${document.getElementById('resCgst').innerText}\nSGST (${currentSlab/2}%): ${document.getElementById('resSgst').innerText}` : `IGST (${currentSlab}%): ${document.getElementById('resIgst').innerText}`;
+
+      const text = encodeURIComponent(`🧾 GST Bill Breakdown (${currentSlab}% Slab):\nमूल बेस रेट (Base Price): ${base}\n${splitType}\nकुल टैक्स (Total GST): ${tax}\n\nकुल फाइनल बिल (Gross Total): ${total}\n\nऑनलाइन कैलकुलेट करें: ` + window.location.href);
+      window.open(`https://api.whatsapp.com/send?text=${text}`, '_blank');
+    }
+  </script>
+</body>
+</html>
